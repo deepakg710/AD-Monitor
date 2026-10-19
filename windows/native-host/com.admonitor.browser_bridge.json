@@ -1,0 +1,9 @@
+{
+  "name": "com.admonitor.browser_bridge",
+  "description": "AD Monitor Browser Telemetry Native Messaging Host",
+  "path": "C:\\ADMonitor\\native-host\\native_host.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://REPLACE_WITH_EXTENSION_ID/"
+  ]
+}

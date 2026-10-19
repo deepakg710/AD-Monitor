@@ -1,0 +1,28 @@
+{
+  "timezone": "Asia/Kolkata",
+  "event_retention_days": 90,
+  "health_retention_days": 14,
+  "alert_retention_days": 365,
+  "raw_retention_days": 30,
+  "max_pending_records": 10000,
+  "min_free_mb": 256,
+  "business_start": 9,
+  "business_end": 18,
+  "business_days": [0, 1, 2, 3, 4],
+  "sensitive_paths": [
+    "C:\\ADMonitor-Demo\\Sensitive",
+    "C:\\ADMonitor-Demo\\HR",
+    "C:\\ADMonitor-Demo\\Finance"
+  ],
+  "path_mappings": [
+    {
+      "source": "\\\\WIN-8IIRPFSV4GI.lab.local\\ADMonitor-Demo",
+      "target": "C:\\ADMonitor-Demo"
+    }
+  ],
+  "model_min_windows": 48,
+  "model_min_days": 7,
+  "model_user_min_windows": 24,
+  "model_contamination": 0.05,
+  "model_lateness_minutes": 15
+}

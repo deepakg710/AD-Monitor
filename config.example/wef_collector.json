@@ -1,0 +1,8 @@
+{
+  "backend_url": "http://192.168.77.1:8000",
+  "channel": "ForwardedEvents",
+  "batch_size": 50,
+  "poll_interval_seconds": 5,
+  "bookmark_file": "C:\\ADMonitor\\collector\\wef_bookmark.xml",
+  "queue_dir": "C:\\ADMonitor\\collector\\queue"
+}

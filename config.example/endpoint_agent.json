@@ -1,0 +1,5 @@
+{
+  "backend_url": "http://192.168.77.1:8000",
+  "heartbeat_interval_seconds": 30,
+  "queue_dir": "C:\\ADMonitor\\agent\\agent_queue"
+}

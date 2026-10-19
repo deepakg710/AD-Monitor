@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "AD Monitor Browser Telemetry Bridge",
+  "version": "2.0.0",
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3pXY2yBKUiZYhpbl5QlTRFXWwEqmIF9RXCHwk5jlxESIzRFVmd4iZqrvM3e7/ABEiM0RVZneImaq7zN3u/wARIjNEVWZ3iJmqu8zd7v8AESIzRFVmd4iZqrvM3e7/ABEiM0RVZneImaq7zN3u/wARIjNEVWZ3iJmqu8zd7v8CAwEAAQ==",
+  "description": "Privacy-scoped enterprise browser telemetry collector for AD Monitor. Captures top-level domain navigations and download metadata only.",
+  "incognito": "not_allowed",
+  "permissions": [
+    "webNavigation",
+    "downloads",
+    "nativeMessaging",
+    "storage",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "AD Monitor Browser Telemetry",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

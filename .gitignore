@@ -1,0 +1,15 @@
+.venv/
+node_modules/
+data/
+*.db*
+*.pem
+*.key
+*.pfx
+*.secret
+__pycache__/
+.pytest_cache/
+.pytest_tmp/
+*.log
+config.local.json
+.DS_Store
+Thumbs.db

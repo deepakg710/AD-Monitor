@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AD Monitor Browser Bridge</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-shell">
+    <header class="popup-header">
+      <div class="brand-row">
+        <div class="brand-badge">AD</div>
+        <div>
+          <h1>AD Monitor Telemetry</h1>
+          <p class="subtitle" id="browserInfo">Loading browser metadata...</p>
+        </div>
+      </div>
+      <span class="status-pill" id="connectionPill">Checking...</span>
+    </header>
+
+    <section class="card">
+      <div class="section-title">ENROLLMENT &amp; IDENTITY</div>
+      <div class="kv-grid">
+        <span class="kv-label">Profile ID</span>
+        <code class="kv-val" id="profileId">—</code>
+        <span class="kv-label">Windows User</span>
+        <span class="kv-val" id="osUser">Not bound</span>
+        <span class="kv-label">Windows SID</span>
+        <code class="kv-val" id="osSid">Not bound</code>
+        <span class="kv-label">Endpoint</span>
+        <span class="kv-val" id="deviceHost">—</span>
+      </div>
+      <div class="enroll-controls" id="enrollBox">
+        <label for="profileLabelInput">Profile Label</label>
+        <div class="input-row">
+          <input type="text" id="profileLabelInput" placeholder="e.g. LAB\sales.demo Edge Work Profile" />
+          <button type="button" id="enrollBtn" class="btn-primary">Enroll</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title">COLLECTION TELEMETRY</div>
+      <div class="metrics-row">
+        <div class="metric-box">
+          <span class="metric-num" id="navCount">0</span>
+          <span class="metric-lbl">Domains</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-num" id="dlCount">0</span>
+          <span class="metric-lbl">Downloads</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-num" id="queueDepth">0</span>
+          <span class="metric-lbl">Queued</span>
+        </div>
+      </div>
+      <div class="kv-grid compact">
+        <span class="kv-label">Last Delivery</span>
+        <span class="kv-val" id="lastDelivery">Never</span>
+      </div>
+      <div class="error-banner hidden" id="errorBanner"></div>
+      <div class="action-row">
+        <button type="button" id="pauseBtn" class="btn-secondary">Pause Collection</button>
+        <button type="button" id="flushBtn" class="btn-outline">Sync Now</button>
+      </div>
+    </section>
+
+    <section class="card privacy-card">
+      <div class="section-title">PRIVACY &amp; COLLECTION SCOPE</div>
+      <ul class="privacy-list">
+        <li><span class="dot ok"></span><strong>Collected:</strong> Top-level HTTP/HTTPS domain names &amp; download file metadata.</li>
+        <li><span class="dot blocked"></span><strong>Never Collected:</strong> Full URLs, paths, query parameters, page content, form inputs, passwords, cookies, or Incognito tabs.</li>
+      </ul>
+    </section>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

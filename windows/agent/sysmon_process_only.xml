@@ -1,0 +1,49 @@
+<!--
+  AD Monitor - Optional Scoped Sysmon Configuration (Process Creation & Termination Only)
+  =======================================================================================
+  Purpose:
+    Provides ProcessCreate (Event ID 1) and ProcessTerminate (Event ID 5) lifecycle events
+    with deterministic ProcessGuid and ParentProcessGuid for verified parent-child lineage
+    and SHA256 executable hashing, while keeping CPU/disk overhead minimal on 8 GB lab VMs.
+
+  Note:
+    Sysmon is OPTIONAL. When Sysmon is not installed on LAB-PC01, AD Monitor automatically
+    falls back to Windows Security Auditing (Event IDs 4688 & 4689) and live 15-second
+    process snapshots.
+
+  Installation on LAB-PC01 (Administrator PowerShell):
+    sysmon64.exe -accepteula -i C:\ADMonitor\agent\sysmon_process_only.xml
+-->
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>SHA256</HashAlgorithms>
+  <CheckRevocation>False</CheckRevocation>
+  <EventFiltering>
+    <!-- Capture all process creation events (Event ID 1) -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude" />
+    </RuleGroup>
+
+    <!-- Capture all process termination events (Event ID 5) -->
+    <RuleGroup name="ProcessTerminate" groupRelation="or">
+      <ProcessTerminate onmatch="exclude" />
+    </RuleGroup>
+
+    <!-- Disable noisy high-volume events to preserve VM resources -->
+    <RuleGroup name="DisabledHighVolume" groupRelation="or">
+      <FileCreateTime onmatch="include" />
+      <NetworkConnect onmatch="include" />
+      <DriverLoad onmatch="include" />
+      <ImageLoad onmatch="include" />
+      <CreateRemoteThread onmatch="include" />
+      <RawAccessRead onmatch="include" />
+      <ProcessAccess onmatch="include" />
+      <FileCreate onmatch="include" />
+      <RegistryEvent onmatch="include" />
+      <FileCreateStreamHash onmatch="include" />
+      <PipeEvent onmatch="include" />
+      <WmiEvent onmatch="include" />
+      <DnsQuery onmatch="include" />
+      <FileDelete onmatch="include" />
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

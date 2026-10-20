@@ -62,6 +62,7 @@ function playRadarChime() {
 function Login({ onLogin }: { onLogin: (u: User) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [initialized, setInitialized] = useState(true);
@@ -95,6 +96,16 @@ function Login({ onLogin }: { onLogin: (u: User) => void }) {
             setBusy(true);
             setError('');
             try {
+              if (!initialized) {
+                if (password.length < 12) {
+                  throw new Error('Administrator passphrase must be at least 12 characters.');
+                }
+                if (password !== confirmPassword) {
+                  throw new Error('Passphrase confirmation does not match.');
+                }
+                await api('/auth/setup', { method: 'POST', body: JSON.stringify({ username, password }) });
+                setInitialized(true);
+              }
               const d = await api('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
               setCsrf(d.csrf, d.token);
               onLogin({ ...d.user, csrf: d.csrf });
@@ -106,20 +117,22 @@ function Login({ onLogin }: { onLogin: (u: User) => void }) {
           }}
         >
           <Badge tone="success">LOCAL WORKSPACE</Badge>
-          <h2>Welcome to AD Monitor</h2>
-          <p>Sign in with your application account.</p>
+          <h2>{initialized ? 'Welcome to AD Monitor' : 'Initial Administrator Setup'}</h2>
+          <p>{initialized ? 'Sign in with your application account.' : 'Create a unique administrator account (12+ character passphrase required).'}</p>
           <ErrorBox message={error} />
           {!initialized && (
             <div className="setup-notice">
-              <strong>Create the first administrator locally</strong>
-              <p>Run the setup script on the backend laptop, then:</p>
-              <code>.venv\Scripts\python -m backend.cli create-admin --username deepak</code>
-              <p>Enter the password privately in the terminal.</p>
+              <strong>No default credentials exist</strong>
+              <p>Create your unique administrator account below or run locally:</p>
+              <code>python -m backend.cli create-admin --username &lt;your-admin&gt;</code>
             </div>
           )}
           <label>Username<input autoComplete="username" required value={username} onChange={e => setUsername(e.target.value)} /></label>
-          <label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
-          <button className="primary" disabled={busy || !initialized}>{busy ? 'Signing in…' : 'Sign in'}<ArrowUpRight size={17} /></button>
+          <label>Password (12+ chars)<input type="password" autoComplete={initialized ? 'current-password' : 'new-password'} required minLength={initialized ? 1 : 12} value={password} onChange={e => setPassword(e.target.value)} /></label>
+          {!initialized && (
+            <label>Confirm Password<input type="password" autoComplete="new-password" required minLength={12} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} /></label>
+          )}
+          <button className="primary" disabled={busy}>{busy ? (initialized ? 'Signing in…' : 'Creating admin…') : (initialized ? 'Sign in' : 'Create Admin & Sign In')}<ArrowUpRight size={17} /></button>
           <small>AD directory accounts and application accounts are separate.</small>
         </form>
       </div>

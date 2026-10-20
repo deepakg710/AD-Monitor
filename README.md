@@ -5,7 +5,8 @@
 [![React](https://img.shields.io/badge/React-18.0+-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Windows](https://img.shields.io/badge/Platform-Windows_AD_Lab-0078D6?logo=windows&logoColor=white)](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-domain-services)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/deepakg710/AD-Monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/deepakg710/AD-Monitor/actions)
 [![Status](https://img.shields.io/badge/Project-BE_CSE_Capstone_BITM-8A2BE2)](#author)
 
 > **AD Monitor** is a defensive cybersecurity monitoring and investigation platform designed for Windows Active Directory lab environments. It combines Windows Security Event Forwarding (WEF), endpoint process telemetry, privacy-preserving browser activity monitoring, 19 deterministic detection rules, and CPU-based User Behavior Analytics (UBA) to help investigate potentially suspicious user and endpoint activity.

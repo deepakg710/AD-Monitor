@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use or reference this project, please cite it as below."
+authors:
+  - family-names: "G."
+    given-names: "Deepak"
+    affiliation: "Ballari Institute of Technology & Management (BITM)"
+title: "AD Monitor: AI-Driven Insider Threat Detection & Endpoint Monitoring using User Behavior Analytics"
+version: 1.0.0
+date-released: 2026-10-19
+url: "https://github.com/deepakg710/AD-Monitor"
+repository-code: "https://github.com/deepakg710/AD-Monitor"
+keywords:
+  - cybersecurity
+  - active-directory
+  - insider-threat-detection
+  - user-behavior-analytics
+  - isolation-forest
+  - incident-response
+  - windows-event-forwarding

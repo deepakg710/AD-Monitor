@@ -12,12 +12,18 @@ def test_full_api_workflow():
         _run_workflow(client)
 
 def _run_workflow(client: TestClient):
-    # 1. Setup first admin
-    resp = client.post("/api/auth/setup", json={"username": "deepak_admin", "password": "AdminPassword123!"})
+    # 0. Verify previously published default passwords are rejected
+    for disallowed_pwd in ("admin12345", "AdminPassword123!", "password123456"):
+        bad_setup = client.post("/api/auth/setup", json={"username": "deepak_admin", "password": disallowed_pwd})
+        assert bad_setup.status_code == 422
+
+    # 1. Setup first admin with a unique 12+ character passphrase
+    unique_test_pass = "LabVerify_UniquePass#2026"
+    resp = client.post("/api/auth/setup", json={"username": "deepak_admin", "password": unique_test_pass})
     assert resp.status_code == 200
 
     # 2. Login
-    login_resp = client.post("/api/auth/login", json={"username": "deepak_admin", "password": "AdminPassword123!"})
+    login_resp = client.post("/api/auth/login", json={"username": "deepak_admin", "password": unique_test_pass})
     assert login_resp.status_code == 200
     data = login_resp.json()
     token = data["token"]

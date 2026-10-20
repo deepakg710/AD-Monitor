@@ -542,7 +542,7 @@ def test_browser_privacy_guards_revisions_and_gaps(env_setup):
     )
     _drain_inbox(db)
 
-    nav_res = client.get("/api/browser/navigations", headers=headers).json()
+    nav_res = client.get("/api/browser/navigations?start=2026-10-04T00:00:00Z&end=2026-10-05T00:00:00Z", headers=headers).json()
     assert len(nav_res["items"]) == 1
     assert nav_res["items"][0]["normalized_domain"] == "portal.vendor-tools.example"
     # Verify query string / path were stripped from stored raw_sanitized_evidence
@@ -604,7 +604,7 @@ def test_browser_privacy_guards_revisions_and_gaps(env_setup):
     )
     _drain_inbox(db)
 
-    dl_res = client.get("/api/browser/downloads", headers=headers).json()
+    dl_res = client.get("/api/browser/downloads?start=2026-10-04T00:00:00Z&end=2026-10-05T00:00:00Z", headers=headers).json()
     assert len(dl_res["items"]) == 1
     dl_item = dl_res["items"][0]
     assert dl_item["state"] == "completed"
@@ -650,7 +650,7 @@ def test_browser_privacy_guards_revisions_and_gaps(env_setup):
         },
     )
     _drain_inbox(db)
-    status_res = client.get("/api/browser/status", headers=headers).json()
+    status_res = client.get("/api/browser/status?start=2026-10-04T00:00:00Z&end=2026-10-05T00:00:00Z", headers=headers).json()
     assert len(status_res["gaps"]) == 1
     assert status_res["gaps"][0]["gap_kind"] == "User paused"
     assert status_res["gaps"][0]["started_at"].startswith("2026-10-04T12:31:00")

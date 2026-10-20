@@ -25,9 +25,9 @@ def _cli() -> int:
     parser = argparse.ArgumentParser(prog="python -m backend.api", description="AD Monitor Administrative CLI")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_admin = sub.add_parser("create-admin", help="Create or reset an administrator user")
+    p_admin = sub.add_parser("create-admin", help="Create or rotate an administrator user password")
     p_admin.add_argument("--username", required=True)
-    p_admin.add_argument("--password", required=True)
+    p_admin.add_argument("--password", required=False, help="Optional password (if omitted, prompted securely via getpass)")
 
     p_enroll = sub.add_parser("enroll-collector", help="Enroll or rotate a collector token")
     p_enroll.add_argument("--name", required=True)
@@ -42,9 +42,31 @@ def _cli() -> int:
     args = parser.parse_args()
 
     if args.command == "create-admin":
+        import getpass
+        from .security import HASHER, validate_password_strength
+        uname = args.username.strip()
+        pwd = args.password
+        if not pwd:
+            pwd = getpass.getpass("Unique administrator passphrase (12+ characters): ")
+            if pwd != getpass.getpass("Repeat passphrase: "):
+                print("ERROR: Passphrases do not match.", file=sys.stderr)
+                return 1
+        validate_password_strength(uname, pwd)
         with db.tx() as c:
-            ident = create_user(c, args.username.strip(), args.password, "Admin", "local-cli")
-        print(json.dumps({"ok": True, "id": ident, "username": args.username.strip()}, indent=2))
+            existing = c.execute("SELECT id FROM users WHERE username=?", (uname,)).fetchone()
+            if existing:
+                ident = existing["id"]
+                c.execute(
+                    "UPDATE users SET password_hash=?, role='Admin', enabled=1 WHERE id=?",
+                    (HASHER.hash(pwd), ident),
+                )
+                c.execute("DELETE FROM sessions WHERE user_id=?", (ident,))
+                audit(c, "local-cli", "user_password_rotated", {"id": ident, "username": uname})
+                action = "rotated"
+            else:
+                ident = create_user(c, uname, pwd, "Admin", "local-cli")
+                action = "created"
+        print(json.dumps({"ok": True, "action": action, "id": ident, "username": uname}, indent=2))
         return 0
 
     if args.command == "enroll-collector":

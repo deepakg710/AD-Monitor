@@ -9,9 +9,28 @@ from .db import now, dt, stamp, digest, uid, audit
 HASHER=PasswordHasher(time_cost=3,memory_cost=32768,parallelism=1)
 DUMMY=HASHER.hash(secrets.token_urlsafe(32))
 
+DISALLOWED_PASSWORDS=frozenset({
+    'admin12345',
+    'admin123456',
+    'admin12345678',
+    'adminpassword123!',
+    'password12345',
+    'password123456',
+    'changeme12345',
+    'administrator',
+    'welcome12345',
+})
+
+def validate_password_strength(username:str,password:str)->None:
+    if not 12<=len(password)<=256:
+        raise ValueError('Password must contain 12–256 characters')
+    norm=password.strip().lower()
+    if norm in DISALLOWED_PASSWORDS or norm==username.strip().lower():
+        raise ValueError('Default, shared, or username-matching passwords are not permitted. Choose a unique 12+ character passphrase.')
+
 def create_user(c,username,password,role='Admin',actor='local-cli'):
     if not 3<=len(username)<=64 or not username.replace('.','').replace('_','').replace('-','').isalnum(): raise ValueError('Username must be 3–64 letters, digits, dots, dashes or underscores')
-    if not 12<=len(password)<=256: raise ValueError('Password must contain 12–256 characters')
+    validate_password_strength(username,password)
     ident=uid(); c.execute('INSERT INTO users VALUES(?,?,?,?,1,?)',(ident,username,HASHER.hash(password),role,now()))
     audit(c,actor,'user_created',{'id':ident,'username':username,'role':role}); return ident
 
@@ -36,8 +55,12 @@ def login(db,username,password,ip):
         attempt=c.execute('SELECT * FROM login_attempts WHERE identity=?',(identity,)).fetchone()
         if attempt and attempt['failures']>=8 and attempt['until_time']>now(): raise HTTPException(429,'Too many login attempts; wait 15 minutes')
         user=c.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone()
-        try: valid=HASHER.verify(user['password_hash'] if user else DUMMY,password)
-        except (VerificationError,InvalidHashError): valid=False
+        if password.strip().lower() in DISALLOWED_PASSWORDS:
+            valid=False
+            audit(c,'anonymous','disallowed_default_password_blocked',{'username':username,'source_hash':identity})
+        else:
+            try: valid=HASHER.verify(user['password_hash'] if user else DUMMY,password)
+            except (VerificationError,InvalidHashError): valid=False
         if not user or not valid or not user['enabled']:
             failures=attempt['failures']+1 if attempt and attempt['until_time']>now() else 1
             c.execute('INSERT INTO login_attempts VALUES(?,?,?) ON CONFLICT(identity) DO UPDATE SET failures=excluded.failures,until_time=excluded.until_time',(identity,failures,stamp(dt(now())+timedelta(minutes=15))))

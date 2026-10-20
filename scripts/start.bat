@@ -17,7 +17,7 @@ set ADMONITOR_ALLOW_LAB_HTTP=1
 echo [*] Starting AD Monitor server on http://0.0.0.0:8765 ...
 echo [*] Local UI: http://localhost:8765
 echo [*] Lab VMs:  http://192.168.77.1:8765
-echo [*] Sign in with: admin / admin12345  (or deepak / AdminPassword123!)
+echo [*] First-time admin setup: python -m backend.cli create-admin --username ^<admin_username^>
 echo [*] Press Ctrl+C to stop.
 echo.
 

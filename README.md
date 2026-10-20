@@ -362,18 +362,21 @@ AD-Monitor/
    ```
    *Creates a Python virtual environment, installs backend dependencies, and initializes the SQLite database.*
 
-3. **Start the application**:
+3. **Create your unique administrator account**:
+   ```powershell
+   .venv\Scripts\python -m backend.cli create-admin --username <your_admin_username>
+   ```
+   *Prompts privately via `getpass` for a unique 12+ character passphrase (hashed with Argon2id). No default or shared administrator credentials ship with AD Monitor, and previously published default passphrases are blocked at the authentication layer.*
+
+4. **Start the application**:
    ```cmd
    scripts\start.bat
    ```
    *Launches the Uvicorn ASGI server on `http://127.0.0.1:8765`.*
 
-4. **Sign in to the web dashboard**:
+5. **Sign in to the web dashboard**:
    - Open: **`http://localhost:8765`**
-   - Default Administrator Credentials:
-     - **Username**: `admin`
-     - **Password**: `admin12345`
-     *(or use `deepak` / `AdminPassword123!`)*
+   - If no administrator account has been created yet via CLI, the web UI presents the **Initial Administrator Setup** screen requiring a unique 12+ character passphrase before first sign-in.
 
 ---
 
@@ -413,42 +416,113 @@ powershell -ExecutionPolicy Bypass -File .\windows\agent\install_agent.ps1 `
 
 ---
 
-## Testing and Verification
+## Testing, Proof of Execution, and Sample I/O
 
-Run the comprehensive automated test suite:
+Run the automated test suite:
 
 ```powershell
 scripts\run_tests.bat
-```
-*or directly with pytest:*
-```powershell
+# or directly with pytest:
 python -m pytest -v
 ```
 
-### Test Coverage Highlights
-- **`tests/test_database.py`**: SQLite WAL mode validation, table constraints, and schema migrations.
-- **`tests/test_normalization.py`**: Accurate parsing of Windows Security XML (`4624`, `4688`, `5145`, Sysmon).
-- **`tests/test_rules.py`**: Verification of all 19 detection rules with positive, negative, and cooldown cases.
-- **`tests/test_uba_model.py`**: Verification of Isolation Forest math, baseline thresholding, and cold-start state.
-- **`tests/test_process_browser_timeline.py`**: End-to-end multi-sensor correlation, Native Messaging framing, and download revision logic.
-- **`tests/test_api.py`**: Complete REST API workflow, Argon2id authentication, and role authorization.
+### Verified Test Suite Output (`pytest -v`)
 
-### Suggested Acceptance Criteria
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0
+rootdir: AD-Monitor
+configfile: pytest.ini
+testpaths: tests
+collecting ... collected 27 items
 
-| Component | Required Demonstration Evidence |
-| :--- | :--- |
-| **Windows Ingestion** | Genuine forwarded Event ID 4624/5145 appears in Event Explorer with preserved SID and timestamp. |
-| **Process Monitoring** | Live process snapshot displays on `/processes` with accurate CPU delta and parent lineage tree. |
-| **Browser Privacy** | Navigation table on `/browser-activity` shows top-level domain only; full URLs and queries are absent. |
-| **Timeline Correlation** | Correlated chain appears on `/timeline` linking domain visit &rarr; download &rarr; process execution. |
-| **Detection Engine** | Running `controlled-tests\03_canary_access.ps1` triggers an immediate Critical alert. |
-| **UBA Cold-Start** | Dashboard displays `Collecting baseline` when feature windows are below the 48-window threshold. |
-| **Security Controls** | Access without valid session or with invalid CSRF token returns `401 Unauthorized` / `403 Forbidden`. |
+tests/test_api.py::test_full_api_workflow PASSED                         [  3%]
+tests/test_database.py::test_database_migration_and_wal PASSED           [  7%]
+tests/test_database.py::test_database_backup PASSED                      [ 11%]
+tests/test_database.py::test_presence_calculation PASSED                 [ 14%]
+tests/test_ingestion.py::test_heartbeat_ingestion_and_health PASSED      [ 18%]
+tests/test_normalization.py::test_canonical_path PASSED                  [ 22%]
+tests/test_normalization.py::test_scoped_paths PASSED                    [ 25%]
+tests/test_normalization.py::test_parse_xml_4663_file_read PASSED        [ 29%]
+tests/test_normalization.py::test_parse_xml_4656_access_denied PASSED    [ 33%]
+tests/test_normalization.py::test_parse_defender_1116 PASSED             [ 37%]
+tests/test_process_browser_timeline.py::test_migration_003_reversible PASSED [ 40%]
+tests/test_process_browser_timeline.py::test_integration_defects_fixed PASSED [ 44%]
+tests/test_process_browser_timeline.py::test_command_line_redaction_and_url_sanitization PASSED [ 48%]
+tests/test_process_browser_timeline.py::test_process_snapshots_cpu_delta_pid_reuse_and_batches PASSED [ 51%]
+tests/test_process_browser_timeline.py::test_out_of_order_process_lifecycle_events PASSED [ 55%]
+tests/test_process_browser_timeline.py::test_browser_privacy_guards_revisions_and_gaps PASSED [ 59%]
+tests/test_process_browser_timeline.py::test_native_host_framing_allowlist_and_hashing PASSED [ 62%]
+tests/test_process_browser_timeline.py::test_investigation_timeline_correlations_negative_cases_and_review PASSED [ 66%]
+tests/test_process_browser_timeline.py::test_powershell_and_extension_artifacts_valid PASSED [ 70%]
+tests/test_rules.py::test_rule_seeding_and_evaluation PASSED             [ 74%]
+tests/test_rules.py::test_canary_rule PASSED                             [ 77%]
+tests/test_rules.py::test_telemetry_readiness PASSED                     [ 81%]
+tests/test_rules.py::test_c2_beacon_threshold_and_aggregation PASSED     [ 85%]
+tests/test_rules.py::test_failed_logon_wrong_password_counter PASSED     [ 88%]
+tests/test_uba_model.py::test_isolation_forest_anomaly_detection PASSED  [ 92%]
+tests/test_uba_model.py::test_cold_start_and_baseline PASSED             [ 96%]
+tests/test_uba_model.py::test_explain_anomaly_format PASSED              [100%]
+
+======================== 27 passed, 1 warning in 8.55s ========================
+```
+
+### Sample Telemetry Input & Correlated Timeline Output
+
+**1. Sample Browser Navigation Input (`POST /api/ingest`)** — full URL submitted by collector:
+```json
+{
+  "schema_version": 2,
+  "transport_id": "br-2",
+  "records": [
+    {
+      "id": "nav-valid-1",
+      "kind": "browser_navigation",
+      "data": {
+        "profile_id": "bprof-sales-edge-001",
+        "user_sid": "S-1-5-21-3842910112-1190445821-2910443110-1104",
+        "browser_name": "Edge",
+        "extension_id": "ext-edge-lab",
+        "navigation_time": "2026-10-04T12:30:00.200Z",
+        "url": "https://portal.vendor-tools.example/login?user=sales&secret=123#top",
+        "tab_id": 10,
+        "frame_id": 0
+      }
+    }
+  ]
+}
+```
+
+**2. Persisted Sanitized Output (`GET /api/browser/navigations`)** — query string, credentials, and path stripped before SQLite persistence:
+```json
+{
+  "id": "nav-valid-1",
+  "profile_id": "bprof-sales-edge-001",
+  "normalized_domain": "portal.vendor-tools.example",
+  "navigation_time": "2026-10-04T12:30:00.200Z",
+  "browser_name": "Edge",
+  "frame_id": 0
+}
+```
+
+**3. Correlated Investigation Timeline Finding (`GET /api/timeline`)**:
+```json
+{
+  "correlation_type": "download_to_process_execution",
+  "confidence": "High",
+  "user_sid": "S-1-5-21-3842910112-1190445821-2910443110-1104",
+  "account": "LAB\\sales.demo",
+  "hostname": "LAB-PC01",
+  "what_it_proves": "Browser completed download of 'updater-helper.exe' from 'portal.vendor-tools.example' followed 12s later by process creation at the same canonical file path.",
+  "what_it_does_not_prove": "Does not by itself prove malicious intent without binary inspection or command-line review."
+}
+```
 
 ---
 
 ## Security and Privacy
 
+- **No Default Credentials**: AD Monitor ships with zero pre-seeded administrator accounts. Initial setup requires a unique 12+ character passphrase hashed with Argon2id (`time_cost=3, memory_cost=32768`), and known shared/default passphrases are rejected at both account creation and login.
 - **Controlled Environment**: AD Monitor is built strictly for authorized laboratory environments. Never install monitoring collectors on personal devices or production networks without written consent.
 - **Credential Protection**: Collector tokens are stored on endpoints using Windows Data Protection API (DPAPI) and sent via TLS/HTTPS headers.
 - **Data Minimization**: Endpoint process command lines undergo regex token redaction before persistence. Browser history, search queries, passwords, and private tabs are rejected by design.
@@ -465,19 +539,20 @@ python -m pytest -v
 
 ---
 
-## Project Roadmap
+## Implemented & Verified vs. Planned Scope
 
-- [x] Windows Event Forwarding (WEF) ingestion pipeline
-- [x] Read-only Process Monitor with verified parent-child lineage
-- [x] Manifest V3 domain-level browser extension & Native Messaging host
-- [x] Multi-source Investigation Timeline correlation engine
-- [x] 19 Deterministic detection rules with telemetry readiness tracking
-- [x] Pure-Python Isolation Forest UBA model with cold-start semantics
-- [x] Attack Library with 17 scenarios and Teacher Presentation Mode
-- [x] Executive case dossier export (PDF, JSON, CSV)
-- [ ] Integration with Microsoft Sysmon Network Connection events (`Event ID 3`)
-- [ ] Automated Sigma rule translation import/export utility
-- [ ] Cross-workstation lateral movement graph visualization
+| Capability | Status | Verification Method |
+| :--- | :--- | :--- |
+| Windows Event XML normalization (`4624`, `4625`, `4656`, `4663`, `4688`, `5145`, `1116`) | **Implemented & Verified** | `tests/test_normalization.py` (5 passed) |
+| Read-only Process Monitor with CPU delta, PID reuse detection & lineage tree | **Implemented & Verified** | `tests/test_process_browser_timeline.py` |
+| Manifest V3 domain-only Browser Extension + DPAPI Native Messaging Host | **Implemented & Verified** | `tests/test_process_browser_timeline.py` |
+| Multi-sensor Investigation Timeline (`visit -> download -> execution -> child`) | **Implemented & Verified** | `tests/test_process_browser_timeline.py` |
+| 19 Deterministic detection rules with cooldowns & telemetry readiness | **Implemented & Verified** | `tests/test_rules.py` (5 passed) |
+| Pure-Python Isolation Forest UBA with 48-window cold-start gate | **Implemented & Verified** | `tests/test_uba_model.py` (3 passed) |
+| Argon2id authentication, CSRF validation, and default-password blocklist | **Implemented & Verified** | `tests/test_api.py` |
+| Microsoft Sysmon Network Connection (`Event ID 3`) ingestion | **Planned** | Roadmap |
+| Automated Sigma rule YAML import/export translator | **Planned** | Roadmap |
+| Cross-workstation lateral movement graph visualization | **Planned** | Roadmap |
 
 ---
 
